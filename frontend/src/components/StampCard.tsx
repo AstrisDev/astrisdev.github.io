@@ -6,9 +6,9 @@ import { yellow } from '@mui/material/colors';
 import { SxProps, Theme } from '@mui/material/styles';
 import { Stamp } from 'api/SfDatabase';
 import React from 'react';
+import { useFavoritesStore } from '../state/favorites.store.ts';
 import { StampInfoDropdown } from './StampInfoDropdown';
 import EmptyImage from './icons/no-stamps.svg';
-import { useFavoritesStore } from '../state/favorites.store.ts';
 
 function FavouriteButton(props: { sx?: SxProps<Theme>; stampId: number }) {
   const isFavorite = useFavoritesStore((s) => s.isFavorite(props.stampId));
@@ -95,15 +95,15 @@ export const StampCard = React.memo(function StampCard(props: { stamp: Stamp }) 
         <Button
           key={s.id /* to avoid color change animation when button is in a virtualized list  */}
           disableElevation
-          color={s.shopItems.length !== 0 ? 'success' : 'info'}
-          variant={s.shopItems.length !== 0 ? 'contained' : 'outlined'}
+          color='success'
+          variant='contained'
           href={s.page}
           target="_blank"
           sx={{ textTransform: 'none' }}
           startIcon={<ShoppingBasket />}
           fullWidth
         >
-          {s.shopItems.length !== 0 ? 'В магазин' : 'Нет в наличии'}
+          В магазин
         </Button>
       </CardActions>
     </Card>
