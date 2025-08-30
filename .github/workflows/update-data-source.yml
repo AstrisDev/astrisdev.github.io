@@ -20,17 +20,17 @@ jobs:
         permissions:
             contents: write
 
-            steps:
-        - name: Check repository access
-          run: |
-            echo "✅ Using GITHUB_TOKEN for repository access"
-            echo "Repository owner: ${{ github.repository_owner }}"
-            echo "Target repository: ${{ github.repository_owner }}/russian-stamps"
-        
-        - name: Setup Go
-          uses: actions/setup-go@v4
-          with:
-              go-version: "1.21"
+        steps:
+            - name: Check repository access
+              run: |
+                  echo "✅ Using GITHUB_TOKEN for repository access"
+                  echo "Repository owner: ${{ github.repository_owner }}"
+                  echo "Target repository: ${{ github.repository_owner }}/russian-stamps"
+
+            - name: Setup Go
+              uses: actions/setup-go@v4
+              with:
+                  go-version: "1.21"
 
             - name: Checkout tools
               uses: actions/checkout@v4
@@ -42,8 +42,8 @@ jobs:
             - name: Checkout data fork
               uses: actions/checkout@v4
               with:
-                  repository: ${{ github.repository_owner }}/russian-stamps # Ваш форк
-                  token: ${{ secrets.GITHUB_TOKEN }} # Используем встроенный токен
+                  repository: ${{ github.repository_owner }}/russian-stamps
+                  token: ${{ secrets.GITHUB_TOKEN }}
                   path: data-repo
 
             - name: Build scraper
@@ -96,6 +96,6 @@ jobs:
                       github.rest.actions.createWorkflowDispatch({
                         owner: context.repo.owner,
                         repo: context.repo.repo,
-                        workflow_id: 'deploy-github-pages.yml',
+                        workflow_id: 'update-and-deploy.yml',
                         ref: 'main'
                       })
