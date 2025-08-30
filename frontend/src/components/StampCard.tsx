@@ -95,15 +95,15 @@ export const StampCard = React.memo(function StampCard(props: { stamp: Stamp }) 
         <Button
           key={s.id /* to avoid color change animation when button is in a virtualized list  */}
           disableElevation
-          color='success'
-          variant='contained'
+          color={s.value !== 0 ? 'success' : 'info'}
+          variant={s.value !== 0 ? 'contained' : 'outlined'}
           href={s.page}
           target="_blank"
           sx={{ textTransform: 'none' }}
           startIcon={<ShoppingBasket />}
           fullWidth
         >
-          В магазин
+          {s.value !== 0 ? 'В магазин' : 'Нет в наличии'}
         </Button>
       </CardActions>
     </Card>
