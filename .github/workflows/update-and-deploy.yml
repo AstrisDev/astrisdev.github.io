@@ -1,0 +1,123 @@
+name: Update Data and Deploy
+
+on:
+    push:
+        branches: [main]
+    schedule:
+        # Запускать каждые 6 часов для проверки обновлений
+        - cron: "0 */6 * * *"
+    workflow_dispatch:
+        inputs:
+            force_scrape:
+                description: "Force scrape rusmarka.ru"
+                required: false
+                default: false
+                type: boolean
+
+jobs:
+    update-and-deploy:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            pages: write
+            id-token: write
+
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+
+        steps:
+            - name: Checkout main repo
+              uses: actions/checkout@v4
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "18"
+                  cache: "npm"
+                  cache-dependency-path: frontend/package-lock.json
+
+            - name: Setup Go
+              uses: actions/setup-go@v4
+              with:
+                  go-version: "1.21"
+
+            - name: Build tools
+              run: |
+                  cd tools
+                  CGO_ENABLED=0 go build -o sfwatch -buildvcs=false ./cmd/sfwatch
+                  CGO_ENABLED=0 go build -o sfscrape -buildvcs=false ./cmd/sfscrape
+
+            - name: Build frontend
+              run: |
+                  cd frontend
+                  npm ci
+                  npm run build
+
+            - name: Initialize site directory
+              run: |
+                  mkdir -p ./site-output
+                  # Первичная генерация сайта (это скачает и настроит данные)
+                  ./tools/sfwatch -r ./site-output -f ./frontend/dist --update-period=1m &
+                  SFWATCH_PID=$!
+
+                  # Ждем инициализации (первого обновления)
+                  sleep 120
+
+                  # Останавливаем sfwatch
+                  kill $SFWATCH_PID || true
+                  wait $SFWATCH_PID 2>/dev/null || true
+
+            - name: Run scraper if needed
+              if: ${{ github.event.inputs.force_scrape == 'true' || github.event_name == 'schedule' }}
+              run: |
+                  # Запускаем скрейпер для обновления данных
+                  if [ -f "./site-output/repo/stamps.json" ]; then
+                    echo "Running scraper to update data..."
+                    ./tools/sfscrape -n -c ./site-output/repo
+                    
+                    # Проверяем, были ли изменения
+                    if git -C ./site-output/repo status --porcelain | grep -q .; then
+                      echo "DATA_UPDATED=true" >> $GITHUB_ENV
+                      
+                      # Коммитим изменения в данные
+                      cd ./site-output/repo
+                      git config user.name "GitHub Actions"
+                      git config user.email "actions@github.com"
+                      git add .
+                      git commit -m "Auto-update stamps data $(date '+%Y-%m-%d %H:%M:%S')" || true
+                      
+                      # Пушим в ваш форк (нужно настроить remote)
+                      # git push origin main
+                    else
+                      echo "DATA_UPDATED=false" >> $GITHUB_ENV
+                    fi
+                  fi
+
+            - name: Regenerate site if data updated
+              run: |
+                  # Всегда перегенерируем сайт для деплоя
+                  echo "Regenerating site..."
+                  ./tools/sfwatch -r ./site-output -f ./frontend/dist --update-period=1m &
+                  SFWATCH_PID=$!
+
+                  # Ждем генерации
+                  sleep 60
+
+                  # Останавливаем
+                  kill $SFWATCH_PID || true
+                  wait $SFWATCH_PID 2>/dev/null || true
+
+            - name: Setup Pages
+              uses: actions/configure-pages@v4
+
+            - name: Upload artifact
+              uses: actions/upload-pages-artifact@v3
+              with:
+                  path: "./site-output/pages"
+
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v4

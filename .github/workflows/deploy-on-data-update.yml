@@ -1,0 +1,71 @@
+name: Deploy on Data Update
+
+on:
+    repository_dispatch:
+        types: [data-updated]
+    workflow_dispatch:
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            pages: write
+            id-token: write
+
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "18"
+                  cache: "npm"
+                  cache-dependency-path: frontend/package-lock.json
+
+            - name: Setup Go
+              uses: actions/setup-go@v4
+              with:
+                  go-version: "1.21"
+
+            - name: Build tools
+              run: |
+                  cd tools
+                  CGO_ENABLED=0 go build -o sfwatch -buildvcs=false ./cmd/sfwatch
+
+            - name: Build frontend
+              run: |
+                  cd frontend
+                  npm ci
+                  npm run build
+
+            - name: Generate site with updated data
+              run: |
+                  mkdir -p ./site-output
+                  echo "Generating site with latest data..."
+
+                  # Запускаем sfwatch для генерации сайта
+                  timeout 300 ./tools/sfwatch -r ./site-output -f ./frontend/dist --update-period=30s || true
+
+                  # Проверяем что страницы сгенерированы
+                  if [ ! -d "./site-output/pages" ]; then
+                    echo "Pages directory not found, trying manual generation..."
+                    sleep 60
+                  fi
+
+            - name: Setup Pages
+              uses: actions/configure-pages@v4
+
+            - name: Upload artifact
+              uses: actions/upload-pages-artifact@v3
+              with:
+                  path: "./site-output/pages"
+
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v4

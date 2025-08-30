@@ -10,7 +10,7 @@ type PipelineOptions struct {
 	RusmarkaDisabled bool          `long:"disable-rusmarka" description:"completely disable scraping rusmarka"`
 	RusmarkaTTL      time.Duration `long:"rusmarka-ttl" default:"168h" description:"period between rusmarka scraping runs if stamps data is not updated"`
 	UpdatePeriod     time.Duration `long:"update-period" default:"30m" description:"period between attempts to update data from the stamps repository"`
-	DataSource       string        `long:"datasource" default:"https://github.com/gwisp2/russian-stamps.git" description:"a git repository with information about stamps"`
+	DataSource       string        `long:"datasource" default:"https://github.com/AstrisDev/russian-stamps.git" description:"a git repository with information about stamps"`
 	DataSourceBranch string        `long:"datasource-branch" default:"main" description:"used branch of that repository"`
 	FrontendFiles    string        `short:"f" long:"frontend" default:"" description:"files to copy into generated pages"`
 	DeployCommand    string        `short:"d" long:"deploy-command" description:"command to run to deploy pages, use {{ .PagesPath }} to get directory with prepared website content"`

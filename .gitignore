@@ -1,2 +1,5 @@
-.env
-/storage
+# Deployment temporary files
+storage/
+site-output/
+*.env
+docker-compose-github.yml

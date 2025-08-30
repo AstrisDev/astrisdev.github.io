@@ -24,19 +24,19 @@ const ValueRangeShortcuts: RangeShortcut[] = [
   {
     icons: [PhotoSizeSelectActualIcon],
     name: 'открытка по России',
-    range: NumberRange.exact(22),
+    range: NumberRange.exact(24),
   },
   {
     icons: [PublicIcon, PhotoSizeSelectActualIcon],
     name: 'открытка за границу',
     comment: 'Беларусь, Казахстан',
-    range: NumberRange.exact(70),
+    range: NumberRange.exact(85),
   },
   {
     icons: [PublicIcon, PhotoSizeSelectActualIcon],
     name: 'открытка за границу',
     comment: 'другие страны',
-    range: NumberRange.exact(90),
+    range: NumberRange.exact(110),
   },
 ];
 
