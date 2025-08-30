@@ -24,22 +24,23 @@
 DataSource string `long:"datasource" default:"https://github.com/YOUR_USERNAME/russian-stamps.git"`
 ```
 
-### **Шаг 3: Создание Personal Access Token**
+### **Шаг 3: Создание Personal Access Token (ОБЯЗАТЕЛЬНО)**
 
-1. Перейдите в **Settings → Developer settings → Personal access tokens → Fine-grained tokens**
-2. Создайте токен с разрешениями для вашего форка `russian-stamps`:
-    - **Repository: Contents** - write
-    - **Repository: Metadata** - read
+1. Перейдите в **Settings → Developer settings → Personal access tokens → Tokens (classic)**
+2. **Generate new token (classic)**
+3. **Scopes** выберите:
+    - ✅ **repo** (полный доступ к репозиториям)
+4. **Generate token** и скопируйте
 
-### **Шаг 4: Настройка токена (ОПЦИОНАЛЬНО)**
+### **Шаг 4: Добавление токена в секреты**
 
-**Встроенный GITHUB_TOKEN** используется по умолчанию и работает для большинства случаев.
-
-Если нужны расширенные права, добавьте в `Settings → Secrets and variables → Actions`:
+Перейдите в `Settings → Secrets and variables → Actions` основного репозитория и добавьте:
 
 ```
-DATA_REPO_TOKEN = ваш_personal_access_token
+DATA_REPO_TOKEN = ваш_classic_personal_access_token
 ```
+
+⚠️ **Важно**: Встроенный GITHUB_TOKEN не может писать в другие репозитории, поэтому нужен пользовательский токен.
 
 ## 🔄 Варианты настройки
 
