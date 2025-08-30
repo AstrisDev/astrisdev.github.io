@@ -1,8 +1,7 @@
-name: Deploy Frontend
+name: Deploy Frontend Only (No Data)
 
 on:
-    push:
-        branches: [main]
+    workflow_dispatch:
 
 jobs:
     deploy:
@@ -36,13 +35,15 @@ jobs:
                   VITE_SF_STAMPS_DATA_URL: "./data/stamps.json"
                   VITE_SF_SHOPS_DATA_URL: "./data/shops.json"
 
-            - name: Create static pages
+            - name: Deploy frontend only (no data)
               run: |
                   mkdir -p ./site-output/pages
                   cp -r frontend/dist/* ./site-output/pages/
                   mkdir -p ./site-output/pages/data
+                  # Создаем заглушки для работы фронтенда
                   echo '[]' > ./site-output/pages/data/stamps.json
                   echo '[]' > ./site-output/pages/data/shops.json
+                  echo "This is a frontend-only deployment. Use 'Quick Deploy' or 'Update Data and Deploy' for full functionality." > ./site-output/pages/data/README.txt
 
             - name: Setup Pages
               uses: actions/configure-pages@v4
