@@ -9,8 +9,18 @@ export class StampApi {
   shopsSources: string[];
 
   constructor() {
-    this.stampsSources = import.meta.env.VITE_SF_STAMPS_DATA_URL.split(';');
-    this.shopsSources = import.meta.env.VITE_SF_SHOPS_DATA_URL.split(';');
+    const stampsDataUrl = import.meta.env.VITE_SF_STAMPS_DATA_URL;
+    const shopsDataUrl = import.meta.env.VITE_SF_SHOPS_DATA_URL;
+    
+    if (!stampsDataUrl) {
+      throw new Error('VITE_SF_STAMPS_DATA_URL environment variable is not set');
+    }
+    if (!shopsDataUrl) {
+      throw new Error('VITE_SF_SHOPS_DATA_URL environment variable is not set');
+    }
+    
+    this.stampsSources = stampsDataUrl.split(';');
+    this.shopsSources = shopsDataUrl.split(';');
   }
 
   async loadDatabase(): Promise<SfDatabase> {
