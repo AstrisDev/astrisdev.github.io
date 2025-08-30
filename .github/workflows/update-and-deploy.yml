@@ -56,80 +56,71 @@ jobs:
                   npm ci
                   npm run build
 
-                  - name: Initialize site directory
-        run: |
-            mkdir -p ./site-output
-            # Первичная генерация сайта (это скачает и настроит данные)
-            echo "Starting sfwatch initialization..."
-            timeout 1800 ./tools/sfwatch -r ./site-output -f ./frontend/dist --update-period=30s --disable-rusmarka || {
-              echo "Timeout reached or process completed"
-            }
+            - name: Initialize site directory
+              run: |
+                  mkdir -p ./site-output
+                  echo "Starting sfwatch initialization..."
+                  timeout 1800 ./tools/sfwatch -r ./site-output -f ./frontend/dist --update-period=30s --disable-rusmarka || {
+                    echo "Timeout reached or process completed"
+                  }
 
-            # Проверяем что базовые данные загружены
-            if [ ! -f "./site-output/repo/stamps.json" ]; then
-              echo "ERROR: stamps.json not found, initialization failed"
-              exit 1
-            fi
+                  if [ ! -f "./site-output/repo/stamps.json" ]; then
+                    echo "ERROR: stamps.json not found, initialization failed"
+                    exit 1
+                  fi
 
-            echo "Basic initialization completed"
+                  echo "Basic initialization completed"
 
-                    - name: Run scraper if needed
-        if: ${{ github.event.inputs.force_scrape == 'true' || github.event_name == 'schedule' }}
-        run: |
-          # Запускаем скрейпер для обновления данных
-          if [ -f "./site-output/repo/stamps.json" ]; then
-            echo "Running scraper to update data..."
-            
-            # Устанавливаем таймаут для скрейпера (максимум 20 минут)
-            timeout 1200 ./tools/sfscrape -n -c ./site-output/repo || {
-              echo "Scraper timeout or completed"
-            }
-            
-            # Проверяем, были ли изменения
-            if git -C ./site-output/repo status --porcelain | grep -q .; then
-              echo "DATA_UPDATED=true" >> $GITHUB_ENV
-              
-              # Коммитим изменения в данные
-              cd ./site-output/repo
-              git config user.name "GitHub Actions"
-              git config user.email "actions@github.com"
-              git add .
-              git commit -m "Auto-update stamps data $(date '+%Y-%m-%d %H:%M:%S')" || true
-              
-              echo "Data changes committed locally"
-            else
-              echo "DATA_UPDATED=false" >> $GITHUB_ENV
-              echo "No data changes detected"
-            fi
-          fi
+            - name: Run scraper if needed
+              if: ${{ github.event.inputs.force_scrape == 'true' || github.event_name == 'schedule' }}
+              run: |
+                  if [ -f "./site-output/repo/stamps.json" ]; then
+                    echo "Running scraper to update data..."
+                    
+                    timeout 1200 ./tools/sfscrape -n -c ./site-output/repo || {
+                      echo "Scraper timeout or completed"
+                    }
+                    
+                    if git -C ./site-output/repo status --porcelain | grep -q .; then
+                      echo "DATA_UPDATED=true" >> $GITHUB_ENV
+                      
+                      cd ./site-output/repo
+                      git config user.name "GitHub Actions"
+                      git config user.email "actions@github.com"
+                      git add .
+                      git commit -m "Auto-update stamps data $(date '+%Y-%m-%d %H:%M:%S')" || true
+                      
+                      echo "Data changes committed locally"
+                    else
+                      echo "DATA_UPDATED=false" >> $GITHUB_ENV
+                      echo "No data changes detected"
+                    fi
+                  fi
 
-                    - name: Generate final site
-        run: |
-          # Финальная генерация сайта для деплоя
-          echo "Generating final site..."
-          
-          # Запускаем sfwatch для генерации страниц (без скрейпинга rusmarka)
-          timeout 300 ./tools/sfwatch -r ./site-output -f ./frontend/dist --update-period=30s --disable-rusmarka || {
-            echo "Site generation timeout or completed"
-          }
-          
-          # Проверяем что страницы сгенерированы
-          if [ ! -d "./site-output/pages" ]; then
-            echo "ERROR: pages directory not found"
-            exit 1
-          fi
-          
-          echo "Site generation completed"
-          ls -la ./site-output/pages/
+            - name: Generate final site
+              run: |
+                  echo "Generating final site..."
 
-              - name: Setup Pages
-                uses: actions/configure-pages@v4
+                  timeout 300 ./tools/sfwatch -r ./site-output -f ./frontend/dist --update-period=30s --disable-rusmarka || {
+                    echo "Site generation timeout or completed"
+                  }
 
-              - name: Upload artifact
-                uses: actions/upload-pages-artifact@v3
-                with:
-                    path: "./site-output/pages"
+                  if [ ! -d "./site-output/pages" ]; then
+                    echo "ERROR: pages directory not found"
+                    exit 1
+                  fi
 
-              - name: Deploy to GitHub Pages
-                id: deployment
-                uses: actions/deploy-pages@v4
+                  echo "Site generation completed"
+                  ls -la ./site-output/pages/
+
+            - name: Setup Pages
+              uses: actions/configure-pages@v4
+
+            - name: Upload artifact
+              uses: actions/upload-pages-artifact@v3
+              with:
+                  path: "./site-output/pages"
+
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v4
