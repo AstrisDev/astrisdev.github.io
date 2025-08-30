@@ -58,9 +58,27 @@ jobs:
               run: |
                   mkdir -p ./site-output
                   echo "Starting sfwatch initialization..."
-                  timeout 1800 ./tools/sfwatch -r ./site-output -f ./frontend/dist --update-period=30s --disable-rusmarka || {
-                    echo "Timeout reached or process completed"
-                  }
+
+                  # Запускаем sfwatch в фоне
+                  ./tools/sfwatch -r ./site-output -f ./frontend/dist --update-period=30s --disable-rusmarka &
+                  SFWATCH_PID=$!
+
+                  echo "Waiting for data repository to be cloned..."
+
+                  # Ждем пока появится stamps.json (максимум 10 минут)
+                  for i in {1..120}; do
+                    if [ -f "./site-output/repo/stamps.json" ]; then
+                      echo "Data repository cloned successfully!"
+                      break
+                    fi
+                    echo "Waiting for repository... (${i}/120)"
+                    sleep 5
+                  done
+
+                  # Останавливаем sfwatch
+                  echo "Stopping sfwatch..."
+                  kill $SFWATCH_PID 2>/dev/null || true
+                  wait $SFWATCH_PID 2>/dev/null || true
 
                   if [ ! -f "./site-output/repo/stamps.json" ]; then
                     echo "ERROR: stamps.json not found, initialization failed"
@@ -99,12 +117,30 @@ jobs:
               run: |
                   echo "Generating final site..."
 
-                  timeout 300 ./tools/sfwatch -r ./site-output -f ./frontend/dist --update-period=30s --disable-rusmarka || {
-                    echo "Site generation timeout or completed"
-                  }
+                  # Запускаем sfwatch в фоне для генерации финального сайта
+                  ./tools/sfwatch -r ./site-output -f ./frontend/dist --update-period=30s --disable-rusmarka &
+                  SFWATCH_PID=$!
 
-                  if [ ! -d "./site-output/pages" ]; then
-                    echo "ERROR: pages directory not found"
+                  echo "Waiting for pages to be generated..."
+
+                  # Ждем пока сгенерируются страницы (максимум 5 минут)
+                  for i in {1..60}; do
+                    if [ -d "./site-output/pages" ] && [ "$(ls -A ./site-output/pages 2>/dev/null)" ]; then
+                      echo "Site generation completed successfully!"
+                      break
+                    fi
+                    echo "Waiting for site generation... (${i}/60)"
+                    sleep 5
+                  done
+
+                  # Останавливаем sfwatch
+                  echo "Stopping sfwatch..."
+                  kill $SFWATCH_PID 2>/dev/null || true
+                  wait $SFWATCH_PID 2>/dev/null || true
+
+                  if [ ! -d "./site-output/pages" ] || [ ! "$(ls -A ./site-output/pages 2>/dev/null)" ]; then
+                    echo "ERROR: pages directory not found or empty"
+                    ls -la ./site-output/ 2>/dev/null || echo "site-output directory doesn't exist"
                     exit 1
                   fi
 
