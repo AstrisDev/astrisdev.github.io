@@ -4,9 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
-	"github.com/gocolly/colly"
-	"github.com/samber/lo"
 	"image"
 	_ "image/jpeg"
 	"image/png"
@@ -17,6 +14,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/PuerkitoBio/goquery"
+	"github.com/gocolly/colly"
+	"github.com/samber/lo"
 )
 
 type ScrapedStamps struct {
@@ -81,7 +82,10 @@ func scrapePropertiesTable(table *goquery.Selection, idHint *int) []scrapedPrope
 	table.Find("tbody").Find("tr").Each(func(_ int, tr *goquery.Selection) {
 		var rowValues []string
 		tr.Find("td").Each(func(i int, td *goquery.Selection) {
-			rowValues = append(rowValues, td.Text())
+			txt := td.Text()
+			txt = strings.TrimSpace(txt)
+
+			rowValues = append(rowValues, txt)
 		})
 		values = append(values, rowValues)
 	})

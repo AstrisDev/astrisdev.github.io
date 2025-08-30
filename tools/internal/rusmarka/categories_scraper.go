@@ -3,15 +3,17 @@ package rusmarka
 import (
 	"errors"
 	"fmt"
-	"github.com/gocolly/colly"
-	"github.com/samber/lo"
-	"golang.org/x/exp/slices"
 	"log"
 	"net/http"
 	"regexp"
 	"sf/internal/data"
 	"sort"
+	"strconv"
 	"strings"
+
+	"github.com/gocolly/colly"
+	"github.com/samber/lo"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -52,6 +54,40 @@ func collectCategoryList() (categories []category, err error) {
 		err = errors.New("no categories found")
 	}
 	return
+}
+
+func CollectMaxPageNumber(catalogUrl string) (int, error) {
+	pages := make([]string, 0)
+
+	collector := newAdvancedCollyCollector()
+	collector.OnHTML("a[href^='/catalog/marki/year/0/p/']", func(a *colly.HTMLElement) {
+		stampsPageUrl := a.Attr("href")
+		if stampsPageUrl[0] == '/' {
+			stampsPageUrl = "https://rusmarka.ru" + stampsPageUrl
+		}
+		pages = append(pages, stampsPageUrl)
+	})
+
+	err := collector.visitWithRetry(catalogUrl)
+	if err != nil {
+		return 0, err
+	}
+
+	pages = lo.Uniq(pages)
+
+	pageNumbers := lo.Map(pages, func(page string, _ int) int {
+		pageNumber := extractPageId(page)
+		if pageNumber == "" {
+			return 0
+		}
+		pageNumberInt, err := strconv.Atoi(pageNumber)
+		if err != nil {
+			return 0
+		}
+		return pageNumberInt
+	})
+
+	return lo.Max(pageNumbers), nil
 }
 
 func CollectStampPageUrls(catalogUrl string) ([]string, error) {

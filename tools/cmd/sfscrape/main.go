@@ -3,14 +3,16 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	mapset "github.com/deckarep/golang-set/v2"
-	"github.com/jessevdk/go-flags"
-	"github.com/samber/lo"
 	"log"
 	"os"
 	"path"
 	"sf/internal/data"
 	"sf/internal/rusmarka"
+	"strconv"
+
+	mapset "github.com/deckarep/golang-set/v2"
+	"github.com/jessevdk/go-flags"
+	"github.com/samber/lo"
 )
 
 type CliOptions struct {
@@ -81,10 +83,25 @@ func scrapeNewPages(stampsJson *data.StampsJson, stampsJsonPath string) bool {
 	// Find links to new pages
 	knownPages := mapset.NewSet[string]()
 	knownPages.Append(stampsJson.AllPages()...)
-	urls, err := rusmarka.CollectStampPageUrls("https://rusmarka.ru/catalog/marki/year/0.aspx")
+
+	maxPageNumber, err := rusmarka.CollectMaxPageNumber("https://rusmarka.ru/catalog/marki/year/0.aspx")
 	if err != nil {
-		log.Fatal("Failed to fetch url with links to new pages: %w", err)
+		log.Fatal("Failed to fetch max page number: %w", err)
 	}
+
+	urls := make([]string, 0)
+
+	if maxPageNumber > 0 {
+		for pageNumber := 0; pageNumber <= maxPageNumber; pageNumber++ {
+			log.Printf("Checking catalog page: https://rusmarka.ru/catalog/marki/year/%s.aspx\n", strconv.Itoa(pageNumber))
+			listOfUrls, err := rusmarka.CollectStampPageUrls(fmt.Sprintf("https://rusmarka.ru/catalog/marki/year/0/p/%d.aspx", pageNumber))
+			if err != nil {
+				log.Fatal("Failed to fetch url with links to new pages: %w", err)
+			}
+			urls = append(urls, listOfUrls...)
+		}
+	}
+
 	var newPages []string
 	for _, url := range urls {
 		if !knownPages.Contains(url) {

@@ -2,7 +2,6 @@ package rusmarka
 
 import (
 	"errors"
-	"github.com/gocolly/colly"
 	"log"
 	"net/url"
 	"regexp"
@@ -10,12 +9,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gocolly/colly"
 )
 
 var (
 	regexpIdRange    = regexp.MustCompile(`^[№\s]*(\d+)-(\d+)`)
 	regexpId         = regexp.MustCompile(`^[№\s]*(\d+)`)
-	regexPrice       = regexp.MustCompile(`\d+,\d+`)
+	regexPrice       = regexp.MustCompile(`\d+`)
 	regexRectShape   = regexp.MustCompile(`^([,.\d]+)\s*[хx×]\s*([,.\d]+)\s*(мм)?$`)
 	regexOvalShape   = regexp.MustCompile(`^овальная, ([,.\d]+)\s*[хx×]\s*([,.\d]+)\s*(мм)?$`)
 	regexCircleShape = regexp.MustCompile(`^(?:марка\s*)?круглая, диаметр ([,.\d]+)\s*(мм)?$`)
@@ -115,6 +116,8 @@ func extractPrice(s string) float64 {
 	priceStr := regexPrice.FindString(s)
 	if priceStr != "" {
 		priceStr = strings.ReplaceAll(priceStr, ",", ".")
+		priceStr = strings.ReplaceAll(priceStr, "руб", "")
+		priceStr = strings.TrimSpace(priceStr)
 		price, err := strconv.ParseFloat(priceStr, 64)
 		if err != nil {
 			return 0
