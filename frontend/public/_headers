@@ -1,0 +1,20 @@
+# GitHub Pages headers configuration
+# Note: GitHub Pages has limited support for custom headers
+
+/
+    Link: </data/shops.json>; rel="prefetch"
+    Link: </data/stamps.json>; rel="prefetch"
+
+# Static assets caching (GitHub Pages will handle most of this automatically)
+/assets/*
+    Cache-Control: public, max-age=31536000, immutable
+
+# Dynamic content
+/icons/*, /config.json, /favicon.ico, /index.html, /manifest.json
+    Cache-Control: no-cache
+
+/data/images/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/data/*.json
+  Cache-Control: no-cache

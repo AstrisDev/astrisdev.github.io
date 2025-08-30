@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  github-deployer:
+    build:
+      context: .
+      dockerfile: ./docker/github-pages.dockerfile
+    container_name: stamp-finder-github-deployer
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITHUB_REPOSITORY=${GITHUB_REPOSITORY}
+      - GITHUB_PAGES_BRANCH=gh-pages
+    volumes:
+      - ./storage:/app/storage 

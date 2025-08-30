@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  cloudflare-deployer:
+    build:
+      context: .
+      dockerfile: ./docker/cloudflare-pages.dockerfile
+    container_name: stamp-finder-deployer
+    environment:
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+      - CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID}
+      - CLOUDFLARE_PROJECT_NAME=julie-app
+      - CLOUDFLARE_PROJECT_BRANCH=main
+    volumes:
+      - ./storage:/app/storage
