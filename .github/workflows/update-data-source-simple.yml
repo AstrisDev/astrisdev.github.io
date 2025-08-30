@@ -1,0 +1,56 @@
+name: Test Data Source Access
+
+on:
+    workflow_dispatch:
+
+jobs:
+    test-access:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+
+        steps:
+            - name: Test with GITHUB_TOKEN
+              uses: actions/checkout@v4
+              with:
+                  repository: ${{ github.repository_owner }}/russian-stamps
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  path: test-with-github-token
+              continue-on-error: true
+
+            - name: Test with DATA_REPO_TOKEN
+              uses: actions/checkout@v4
+              with:
+                  repository: ${{ github.repository_owner }}/russian-stamps
+                  token: ${{ secrets.DATA_REPO_TOKEN }}
+                  path: test-with-data-token
+              continue-on-error: true
+
+            - name: Check results
+              run: |
+                  echo "=== Testing repository access ==="
+                  echo "Repository: ${{ github.repository_owner }}/russian-stamps"
+
+                  if [ -d "test-with-github-token" ]; then
+                    echo "✅ GITHUB_TOKEN worked"
+                    ls -la test-with-github-token/ | head -5
+                  else
+                    echo "❌ GITHUB_TOKEN failed"
+                  fi
+
+                  if [ -d "test-with-data-token" ]; then
+                    echo "✅ DATA_REPO_TOKEN worked"
+                    ls -la test-with-data-token/ | head -5
+                  else
+                    echo "❌ DATA_REPO_TOKEN failed"
+                  fi
+
+                  echo ""
+                  echo "=== Token info ==="
+                  if [ -n "${{ secrets.DATA_REPO_TOKEN }}" ]; then
+                    echo "DATA_REPO_TOKEN is set (length: ${#TOKEN})"
+                  else
+                    echo "DATA_REPO_TOKEN is NOT set"
+                  fi
+              env:
+                  TOKEN: ${{ secrets.DATA_REPO_TOKEN }}

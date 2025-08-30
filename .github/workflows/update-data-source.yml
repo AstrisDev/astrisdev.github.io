@@ -1,9 +1,6 @@
 name: Update Data Source
 
 on:
-    schedule:
-        # Запускать каждые 12 часов для поиска новых марок
-        - cron: "0 */12 * * *"
     workflow_dispatch:
         inputs:
             scrape_new:
@@ -23,11 +20,27 @@ jobs:
         permissions:
             contents: write
 
-        steps:
-            - name: Setup Go
-              uses: actions/setup-go@v4
-              with:
-                  go-version: "1.21"
+            steps:
+        - name: Check if DATA_REPO_TOKEN is configured
+          run: |
+            if [ -z "${{ secrets.DATA_REPO_TOKEN }}" ]; then
+              echo "❌ DATA_REPO_TOKEN secret is not configured"
+              echo "Please set up the DATA_REPO_TOKEN secret in repository settings"
+              echo "See DEPLOYMENT_SETUP.md for instructions"
+              exit 1
+            else
+              echo "✅ DATA_REPO_TOKEN is configured"
+              echo "Token length: ${#TOKEN}"
+              echo "Repository owner: ${{ github.repository_owner }}"
+              echo "Target repository: ${{ github.repository_owner }}/russian-stamps"
+            fi
+          env:
+            TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
+        
+        - name: Setup Go
+          uses: actions/setup-go@v4
+          with:
+              go-version: "1.21"
 
             - name: Checkout tools
               uses: actions/checkout@v4

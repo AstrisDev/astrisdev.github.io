@@ -10,14 +10,28 @@
 
 ## 🔑 Настройка GitHub Secrets
 
-### **Шаг 1: Создание Personal Access Token для форка данных**
+### **Шаг 1: Создание форка репозитория russian-stamps**
 
-Создайте токен с разрешениями:
+1. Перейдите на https://github.com/gwisp2/russian-stamps
+2. Нажмите **Fork** в правом верхнем углу
+3. Создайте форк в своем аккаунте
 
--   **Repository: Contents** - write
--   **Repository: Metadata** - read
+### **Шаг 2: Обновление DataSource в коде**
 
-### **Шаг 2: Добавление Secrets в основной репозиторий**
+Измените в `tools/internal/pipeline_options.go`:
+
+```go
+DataSource string `long:"datasource" default:"https://github.com/YOUR_USERNAME/russian-stamps.git"`
+```
+
+### **Шаг 3: Создание Personal Access Token**
+
+1. Перейдите в **Settings → Developer settings → Personal access tokens → Fine-grained tokens**
+2. Создайте токен с разрешениями для вашего форка `russian-stamps`:
+    - **Repository: Contents** - write
+    - **Repository: Metadata** - read
+
+### **Шаг 4: Добавление Secrets в основной репозиторий**
 
 Перейдите в `Settings → Secrets and variables → Actions` и добавьте:
 
