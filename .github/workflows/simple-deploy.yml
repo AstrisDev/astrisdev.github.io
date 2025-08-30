@@ -1,1 +1,64 @@
- 
+name: Simple Deploy
+
+on:
+    workflow_dispatch:
+    push:
+        branches: [main]
+        paths:
+            - "frontend/**"
+
+jobs:
+    simple-deploy:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            pages: write
+            id-token: write
+
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "18"
+                  cache: "npm"
+                  cache-dependency-path: frontend/package-lock.json
+
+            - name: Build frontend
+              run: |
+                  cd frontend
+                  npm ci
+                  npm run build
+
+            - name: Create static pages with frontend only
+              run: |
+                  mkdir -p ./static-pages
+
+                  # Копируем собранный frontend
+                  cp -r frontend/dist/* ./static-pages/
+
+                  # Создаем пустую папку data (чтобы не было 404 ошибок)
+                  mkdir -p ./static-pages/data
+                  echo '[]' > ./static-pages/data/stamps.json
+                  echo '[]' > ./static-pages/data/shops.json
+
+                  echo "Static deployment ready!"
+                  ls -la ./static-pages/
+
+            - name: Setup Pages
+              uses: actions/configure-pages@v4
+
+            - name: Upload artifact
+              uses: actions/upload-pages-artifact@v3
+              with:
+                  path: "./static-pages"
+
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v4

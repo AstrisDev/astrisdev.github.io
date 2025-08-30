@@ -47,50 +47,50 @@ jobs:
                   npm ci
                   npm run build
 
-                  - name: Generate site (quick mode)
-        run: |
-            mkdir -p ./site-output
+            - name: Generate site (quick mode)
+              run: |
+                  mkdir -p ./site-output
 
-            echo "Starting quick site generation..."
+                  echo "Starting quick site generation..."
 
-            # Запускаем sfwatch в фоне с отключенным rusmarka скрейпингом
-            ./tools/sfwatch -r ./site-output -f ./frontend/dist --update-period=30s --disable-rusmarka &
-            SFWATCH_PID=$!
+                  # Запускаем sfwatch в фоне с отключенным rusmarka скрейпингом
+                  ./tools/sfwatch -r ./site-output -f ./frontend/dist --update-period=30s --disable-rusmarka &
+                  SFWATCH_PID=$!
 
-            echo "Waiting for initial generation..."
+                  echo "Waiting for initial generation..."
 
-            # Ждем пока создастся pages директория (максимум 5 минут)
-            for i in {1..60}; do
-              if [ -d "./site-output/pages" ] && [ "$(ls -A ./site-output/pages 2>/dev/null)" ]; then
-                echo "Site generation completed successfully!"
-                break
-              fi
-              echo "Waiting... (${i}/60)"
-              sleep 5
-            done
+                  # Ждем пока создастся pages директория (максимум 5 минут)
+                  for i in {1..60}; do
+                    if [ -d "./site-output/pages" ] && [ "$(ls -A ./site-output/pages 2>/dev/null)" ]; then
+                      echo "Site generation completed successfully!"
+                      break
+                    fi
+                    echo "Waiting... (${i}/60)"
+                    sleep 5
+                  done
 
-            # Останавливаем sfwatch
-            kill $SFWATCH_PID 2>/dev/null || true
-            wait $SFWATCH_PID 2>/dev/null || true
+                  # Останавливаем sfwatch
+                  kill $SFWATCH_PID 2>/dev/null || true
+                  wait $SFWATCH_PID 2>/dev/null || true
 
-            # Проверяем результат
-            if [ ! -d "./site-output/pages" ] || [ ! "$(ls -A ./site-output/pages 2>/dev/null)" ]; then
-              echo "ERROR: Site generation failed or pages directory is empty"
-              ls -la ./site-output/ || echo "site-output directory doesn't exist"
-              exit 1
-            fi
+                  # Проверяем результат
+                  if [ ! -d "./site-output/pages" ] || [ ! "$(ls -A ./site-output/pages 2>/dev/null)" ]; then
+                    echo "ERROR: Site generation failed or pages directory is empty"
+                    ls -la ./site-output/ || echo "site-output directory doesn't exist"
+                    exit 1
+                  fi
 
-            echo "Quick deployment ready!"
-            ls -la ./site-output/pages/
+                  echo "Quick deployment ready!"
+                  ls -la ./site-output/pages/
 
-              - name: Setup Pages
-                uses: actions/configure-pages@v4
+            - name: Setup Pages
+              uses: actions/configure-pages@v4
 
-              - name: Upload artifact
-                uses: actions/upload-pages-artifact@v3
-                with:
-                    path: "./site-output/pages"
+            - name: Upload artifact
+              uses: actions/upload-pages-artifact@v3
+              with:
+                  path: "./site-output/pages"
 
-              - name: Deploy to GitHub Pages
-                id: deployment
-                uses: actions/deploy-pages@v4
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v4
