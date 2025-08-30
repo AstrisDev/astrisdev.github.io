@@ -21,21 +21,11 @@ jobs:
             contents: write
 
             steps:
-        - name: Check if DATA_REPO_TOKEN is configured
+        - name: Check repository access
           run: |
-            if [ -z "${{ secrets.DATA_REPO_TOKEN }}" ]; then
-              echo "❌ DATA_REPO_TOKEN secret is not configured"
-              echo "Please set up the DATA_REPO_TOKEN secret in repository settings"
-              echo "See DEPLOYMENT_SETUP.md for instructions"
-              exit 1
-            else
-              echo "✅ DATA_REPO_TOKEN is configured"
-              echo "Token length: ${#TOKEN}"
-              echo "Repository owner: ${{ github.repository_owner }}"
-              echo "Target repository: ${{ github.repository_owner }}/russian-stamps"
-            fi
-          env:
-            TOKEN: ${{ secrets.DATA_REPO_TOKEN }}
+            echo "✅ Using GITHUB_TOKEN for repository access"
+            echo "Repository owner: ${{ github.repository_owner }}"
+            echo "Target repository: ${{ github.repository_owner }}/russian-stamps"
         
         - name: Setup Go
           uses: actions/setup-go@v4
@@ -53,7 +43,7 @@ jobs:
               uses: actions/checkout@v4
               with:
                   repository: ${{ github.repository_owner }}/russian-stamps # Ваш форк
-                  token: ${{ secrets.DATA_REPO_TOKEN }} # Токен для записи в форк
+                  token: ${{ secrets.GITHUB_TOKEN }} # Используем встроенный токен
                   path: data-repo
 
             - name: Build scraper

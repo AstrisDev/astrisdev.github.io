@@ -31,9 +31,11 @@ DataSource string `long:"datasource" default:"https://github.com/YOUR_USERNAME/r
     - **Repository: Contents** - write
     - **Repository: Metadata** - read
 
-### **Шаг 4: Добавление Secrets в основной репозиторий**
+### **Шаг 4: Настройка токена (ОПЦИОНАЛЬНО)**
 
-Перейдите в `Settings → Secrets and variables → Actions` и добавьте:
+**Встроенный GITHUB_TOKEN** используется по умолчанию и работает для большинства случаев.
+
+Если нужны расширенные права, добавьте в `Settings → Secrets and variables → Actions`:
 
 ```
 DATA_REPO_TOKEN = ваш_personal_access_token
