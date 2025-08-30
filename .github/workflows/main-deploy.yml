@@ -1,4 +1,4 @@
-name: Main Deploy
+name: Deploy Frontend
 
 on:
     push:
@@ -27,29 +27,22 @@ jobs:
                   cache: "npm"
                   cache-dependency-path: frontend/package-lock.json
 
-                  - name: Build frontend
-        run: |
-          cd frontend
-          npm ci
-          npm run build
-        env:
-          VITE_SF_STAMPS_DATA_URL: "./data/stamps.json"
-          VITE_SF_SHOPS_DATA_URL: "./data/shops.json"
+            - name: Build frontend
+              run: |
+                  cd frontend
+                  npm ci
+                  npm run build
+              env:
+                  VITE_SF_STAMPS_DATA_URL: "./data/stamps.json"
+                  VITE_SF_SHOPS_DATA_URL: "./data/shops.json"
 
             - name: Create static pages
               run: |
-                  mkdir -p ./static-pages
-
-                  # Копируем собранный frontend
-                  cp -r frontend/dist/* ./static-pages/
-
-                  # Создаем пустую папку data (чтобы не было 404 ошибок)
-                  mkdir -p ./static-pages/data
-                  echo '[]' > ./static-pages/data/stamps.json
-                  echo '[]' > ./static-pages/data/shops.json
-
-                  echo "Deployment ready!"
-                  ls -la ./static-pages/
+                  mkdir -p ./site-output/pages
+                  cp -r frontend/dist/* ./site-output/pages/
+                  mkdir -p ./site-output/pages/data
+                  echo '[]' > ./site-output/pages/data/stamps.json
+                  echo '[]' > ./site-output/pages/data/shops.json
 
             - name: Setup Pages
               uses: actions/configure-pages@v4
@@ -57,7 +50,7 @@ jobs:
             - name: Upload artifact
               uses: actions/upload-pages-artifact@v3
               with:
-                  path: "./static-pages"
+                  path: "./site-output/pages"
 
             - name: Deploy to GitHub Pages
               id: deployment

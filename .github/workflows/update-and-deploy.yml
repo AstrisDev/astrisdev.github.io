@@ -2,7 +2,6 @@ name: Update Data and Deploy
 
 on:
     schedule:
-        # Запускать каждые 6 часов для проверки обновлений
         - cron: "0 */6 * * *"
     workflow_dispatch:
         inputs:
@@ -48,14 +47,14 @@ jobs:
                   CGO_ENABLED=0 go build -o sfwatch -buildvcs=false ./cmd/sfwatch
                   CGO_ENABLED=0 go build -o sfscrape -buildvcs=false ./cmd/sfscrape
 
-                  - name: Build frontend
-        run: |
-          cd frontend
-          npm ci
-          npm run build
-        env:
-          VITE_SF_STAMPS_DATA_URL: "./data/stamps.json"
-          VITE_SF_SHOPS_DATA_URL: "./data/shops.json"
+            - name: Build frontend
+              run: |
+                  cd frontend
+                  npm ci
+                  npm run build
+              env:
+                  VITE_SF_STAMPS_DATA_URL: "./data/stamps.json"
+                  VITE_SF_SHOPS_DATA_URL: "./data/shops.json"
 
             - name: Initialize site directory
               run: |
@@ -95,20 +94,20 @@ jobs:
               run: |
                   if [ -f "./site-output/repo/stamps.json" ]; then
                     echo "Running scraper to update data..."
-                    
+
                     timeout 1200 ./tools/sfscrape -n -c ./site-output/repo || {
                       echo "Scraper timeout or completed"
                     }
-                    
+
                     if git -C ./site-output/repo status --porcelain | grep -q .; then
                       echo "DATA_UPDATED=true" >> $GITHUB_ENV
-                      
+
                       cd ./site-output/repo
                       git config user.name "GitHub Actions"
                       git config user.email "actions@github.com"
                       git add .
                       git commit -m "Auto-update stamps data $(date '+%Y-%m-%d %H:%M:%S')" || true
-                      
+
                       echo "Data changes committed locally"
                     else
                       echo "DATA_UPDATED=false" >> $GITHUB_ENV

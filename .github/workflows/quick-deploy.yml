@@ -1,4 +1,4 @@
-name: Quick Deploy (No Scraping)
+name: Quick Deploy
 
 on:
     workflow_dispatch:
@@ -16,7 +16,7 @@ jobs:
             url: ${{ steps.deployment.outputs.page_url }}
 
         steps:
-            - name: Checkout
+            - name: Checkout main repo
               uses: actions/checkout@v4
 
             - name: Setup Node.js
@@ -36,50 +36,48 @@ jobs:
                   cd tools
                   CGO_ENABLED=0 go build -o sfwatch -buildvcs=false ./cmd/sfwatch
 
-                  - name: Build frontend
-        run: |
-          cd frontend
-          npm ci
-          npm run build
-        env:
-          VITE_SF_STAMPS_DATA_URL: "./data/stamps.json"
-          VITE_SF_SHOPS_DATA_URL: "./data/shops.json"
+            - name: Build frontend
+              run: |
+                  cd frontend
+                  npm ci
+                  npm run build
+              env:
+                  VITE_SF_STAMPS_DATA_URL: "./data/stamps.json"
+                  VITE_SF_SHOPS_DATA_URL: "./data/shops.json"
 
             - name: Generate site (quick mode)
               run: |
                   mkdir -p ./site-output
+                  echo "Generating site with existing data..."
 
-                  echo "Starting quick site generation..."
-
-                  # Запускаем sfwatch в фоне с отключенным rusmarka скрейпингом
+                  # Запускаем sfwatch в фоне
                   ./tools/sfwatch -r ./site-output -f ./frontend/dist --update-period=30s --disable-rusmarka &
                   SFWATCH_PID=$!
 
-                  echo "Waiting for initial generation..."
+                  echo "Waiting for site generation..."
 
-                  # Ждем пока создастся pages директория (максимум 5 минут)
-                  for i in {1..60}; do
+                  # Ждем пока сгенерируются страницы (максимум 10 минут)
+                  for i in {1..120}; do
                     if [ -d "./site-output/pages" ] && [ "$(ls -A ./site-output/pages 2>/dev/null)" ]; then
                       echo "Site generation completed successfully!"
                       break
                     fi
-                    echo "Waiting... (${i}/60)"
+                    echo "Waiting for site generation... (${i}/120)"
                     sleep 5
                   done
 
                   # Останавливаем sfwatch
+                  echo "Stopping sfwatch..."
                   kill $SFWATCH_PID 2>/dev/null || true
                   wait $SFWATCH_PID 2>/dev/null || true
 
-                  # Проверяем результат
                   if [ ! -d "./site-output/pages" ] || [ ! "$(ls -A ./site-output/pages 2>/dev/null)" ]; then
-                    echo "ERROR: Site generation failed or pages directory is empty"
-                    ls -la ./site-output/ || echo "site-output directory doesn't exist"
+                    echo "ERROR: pages directory not found or empty"
+                    ls -la ./site-output/ 2>/dev/null || echo "site-output directory doesn't exist"
                     exit 1
                   fi
 
-                  echo "Quick deployment ready!"
-                  ls -la ./site-output/pages/
+                  echo "Site generation completed"
 
             - name: Setup Pages
               uses: actions/configure-pages@v4

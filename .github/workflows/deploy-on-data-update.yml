@@ -38,14 +38,14 @@ jobs:
                   cd tools
                   CGO_ENABLED=0 go build -o sfwatch -buildvcs=false ./cmd/sfwatch
 
-                  - name: Build frontend
-        run: |
-          cd frontend
-          npm ci
-          npm run build
-        env:
-          VITE_SF_STAMPS_DATA_URL: "./data/stamps.json"
-          VITE_SF_SHOPS_DATA_URL: "./data/shops.json"
+            - name: Build frontend
+              run: |
+                  cd frontend
+                  npm ci
+                  npm run build
+              env:
+                  VITE_SF_STAMPS_DATA_URL: "./data/stamps.json"
+                  VITE_SF_SHOPS_DATA_URL: "./data/shops.json"
 
             - name: Generate site with updated data
               run: |
