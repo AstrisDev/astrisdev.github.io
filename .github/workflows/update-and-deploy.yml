@@ -1,8 +1,6 @@
 name: Update Data and Deploy
 
 on:
-    push:
-        branches: [main]
     schedule:
         # Запускать каждые 6 часов для проверки обновлений
         - cron: "0 */6 * * *"

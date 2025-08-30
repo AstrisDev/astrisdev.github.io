@@ -1,10 +1,11 @@
-name: Simple Deploy
+name: Main Deploy
 
 on:
-    workflow_dispatch:
+    push:
+        branches: [main]
 
 jobs:
-    simple-deploy:
+    deploy:
         runs-on: ubuntu-latest
         permissions:
             contents: read
@@ -32,7 +33,7 @@ jobs:
                   npm ci
                   npm run build
 
-            - name: Create static pages with frontend only
+            - name: Create static pages
               run: |
                   mkdir -p ./static-pages
 
@@ -44,7 +45,7 @@ jobs:
                   echo '[]' > ./static-pages/data/stamps.json
                   echo '[]' > ./static-pages/data/shops.json
 
-                  echo "Static deployment ready!"
+                  echo "Deployment ready!"
                   ls -la ./static-pages/
 
             - name: Setup Pages
