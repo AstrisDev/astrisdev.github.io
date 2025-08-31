@@ -134,8 +134,9 @@ func scrapePageParts(pageUrl string) (*scrapedPage, error) {
 					titleWithoutIds: h2text,
 					ids:             stampIds,
 				}
-				imgAfterTitle := h2.DOM.Parent().Next().Find("img")
+				imgAfterTitle := h2.DOM.Parent().NextAll().Find("img")
 				imageUrl, ok := imgAfterTitle.Attr("data-zoom-image")
+
 				if ok && len(imageUrl) >= 1 {
 					if imageUrl[0] == '/' {
 						imageUrl = "https://rusmarka.ru" + imageUrl

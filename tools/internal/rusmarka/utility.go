@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	regexpIdRange    = regexp.MustCompile(`^[№\s]*(\d+)-(\d+)`)
-	regexpId         = regexp.MustCompile(`^[№\s]*(\d+)`)
+	regexpIdRange    = regexp.MustCompile(`[№\s]*(\d+)-(\d+)`)
+	regexpId         = regexp.MustCompile(`[№\s]*(\d+)`)
 	regexPrice       = regexp.MustCompile(`\d+`)
 	regexRectShape   = regexp.MustCompile(`^([,.\d]+)\s*[хx×]\s*([,.\d]+)\s*(мм)?$`)
 	regexOvalShape   = regexp.MustCompile(`^овальная, ([,.\d]+)\s*[хx×]\s*([,.\d]+)\s*(мм)?$`)
@@ -66,7 +66,7 @@ func makeRangeSlice(min, max int) []int {
 func parseStampIds(s string) []int {
 	// search for stamp ids only in the first 15 characters of a title
 	sr := []rune(s)
-	s = string(sr[:min(15, len(sr))])
+	s = string(sr[:min(25, len(sr))])
 	if m := regexpIdRange.FindStringSubmatch(s); m != nil {
 		start, err1 := strconv.Atoi(m[1])
 		end, err2 := strconv.Atoi(m[2])
